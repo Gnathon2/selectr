@@ -1,0 +1,80 @@
+etiquettes? (.ini ou json dans le mod / dans le nom du mod / dans un json centralisé)
+preview? (oui/non, que preview.png ou toutes les img?)
+
+------------CAHIER DES CHARGES--------------------- 
+
+- activation/desactivation avec un DISABLED_ dans le nom du dossier
+- Gestion de plusieurs jeux
+- etiqueter les mods (nsfw notament)
+	STOCKAGE?
+	etiquettes par persos ET mods
+- lancement completement sfw (pê oas)
+- lecture de tous les dossiers dans mods/asm pour création facile de groupes/persos
+- rename persos et mods depuis l'app (pour modifier la data sans conflit)
+- tri et filtre (etiquettes) pour les persos et les mods
+- generer des etiquettes de base pour les persos de base (m/f, elem, region)
+- documenter un peu
+- page avec tous les mods/ tous les enable, disable 
+- que plusieus instances de l'app n'interferent pas (pour pouvoir separer SFW/NSFW)
+- unzip
+- emplacement de l'app indé de GIMI
+
+----------orga des dossiers---------------
+
+GIMI/Mods/ASM/
+	perso1/
+		portrait.png
+		skin1/
+			...
+		skin2/
+			...
+	perso2/
+		...
+
+---------APPARENCE--------
+
+en gros :
+
+| taille images persos/mods| tous les mods | BTNparam | 
+| zone persos | zone mods
+
+
+zone:
+
+|chercher | trier (deroulant/cycle) | filtrer
+| image;nom | scrollbar
+
+image : preview.png dans le dossier
+BTNrename : change le nom en champdetxt, le rename en save, être sur que faire autre chose ne fait que annuler
+
+pour persos: 
+- changer nom  
+- gestion etiquettes +suggestions (donc liste des etiquettes?)
+- ouvrir dossier
+
+pour mods :
+- pareil
+
+
+-------parametres-----------
+- retour
+- génerer les mods des persos avec leurs etiquettes 
+- reset les etiquettes 
+- dossier Mods
+- doc
+
+
+-------BASE MODS----------
+
+tous les persos et skins jouables (et npc incomming)
+armes (par types)
+ui
+npc
+monstres
+decor
+
+-------RESSOURCES NECESSAIRES---------
+portraits pour les base mods
+json etiquettes (1 persos, 1 mods)
+json default (pour la génération de dossiers | juste NTM si delete)
+json theme de l'app (dispo pour les puants mais c'est bon aussi) (default values dans l'app pour eviter la mort si delete)
