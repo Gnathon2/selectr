@@ -1,4 +1,6 @@
-"""ossature mod manager"""
+"""ossature mod manager
+
+TODO : petit bug bizarre avec deepness > 0"""
 import os
 import tkinter as tk
 from tkinter import ttk
@@ -34,7 +36,7 @@ def get_chara(mod_folder, deepness = 0):
     else:
         lst = []
         for chara in os.listdir(mod_folder):
-            if not filtered(name):
+            if not filtered(chara):
                 for name in get_chara(make_path(mod_folder, chara), deepness-1):
                     lst.append(make_path(chara, name))
     return sorted(lst)
@@ -258,10 +260,13 @@ class Game(tk.Frame):
         self.lst_mods = []
 
         refresh_btn = tk.Button(self, bg = bg, fg = fg, command = self.refresh, text='refresh')
-        refresh_btn.pack()
+        refresh_btn.pack(anchor='n')
 
         goback_btn = tk.Button(self, bg = bg, fg = fg, command = self.cmd_goback, text='<-')
         goback_btn.pack(anchor = 'nw')
+
+        self.titre = tk.Label(self, bg =bg , fg =fg , text=self.current_dir)
+        self.titre.pack()
 
 
 
@@ -279,8 +284,8 @@ class Game(tk.Frame):
 
     
     def refresh(self):
-        lst_chara = get_chara(self.current_dir)
-
+        lst_chara = get_chara(self.current_dir, self.deepness)
+        self.titre.config(text=self.current_dir)
         for mod in self.lst_mods:
             mod.destroy()
 
