@@ -8,7 +8,7 @@ preview? (oui/non, que preview.png ou toutes les img?)
 - etiqueter les mods (nsfw notament)
 	STOCKAGE?
 	etiquettes par persos ET mods
-- lancement completement sfw (pê oas)
+- lancement completement sfw (pê pas)
 - lecture de tous les dossiers dans mods/asm pour création facile de groupes/persos
 - rename persos et mods depuis l'app (pour modifier la data sans conflit)
 - tri et filtre (etiquettes) pour les persos et les mods
@@ -18,6 +18,15 @@ preview? (oui/non, que preview.png ou toutes les img?)
 - que plusieus instances de l'app n'interferent pas (pour pouvoir separer SFW/NSFW)
 - unzip
 - emplacement de l'app indé de GIMI
+
+idees en vrax
+- orga des mods comme des musiques, avec preset = playlists 
+- dans l'onglet des playlists, lancer, lancer et désactiver tout le reste
+- possibilité de supermod ? (demande de garder des trucs en mémoire un peut chiantos)
+- detection auto qu'un mod est un mod dès qu'il y a un ini dans l'arborescence (un cassé avec les mods chinois de zzz mais catFU)
+- possibilité quick open par jeu
+
+
 
 ----------orga des dossiers---------------
 
