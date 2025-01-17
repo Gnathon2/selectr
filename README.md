@@ -1,2 +1,2 @@
-# skinselector
-skinselector for anime games
+# selectr
+skin selector for anime games
