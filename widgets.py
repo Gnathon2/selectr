@@ -9,34 +9,37 @@ def from_rgb(r,g,b):
     return f'#{r:02x}{g:02x}{b:02x}'
 
 class Mod(tk.Frame):
+    """One mod is displayed including:
+    - preview if preview.png in the folder
+    - name which is clickable
+    - rename button
+    - toggle button (whick also displays the current status)
+    - open folder button
 
-
-    
-    def __init__(
-            self, 
-            name, 
-            folder, 
-            cmd_goto, 
-            *args,
-            bg ,
-            fg, 
-            nsfw = True, 
-            **kwargs
-        ):
-        self.folder = folder
-        self.name = name
-
-
-        tk.Frame.__init__(self, *args, bg = bg, **kwargs)
-
-        BG = self.cget("bg")
-        FG = "white"
-        BG_ON = "green"
-        BG_OFF = "red"
-
-        self.btn_toggle = tk.Button(self, bg = BG_OFF if self.is_disable() else BG_ON, fg = FG, command=self.cmd_toggle, text='   ')
+    path: absolute path of the mod
+    cmd: what it does to click on the name """
+    def __init__(self, path, cmd,*, root, **theme):
         
-        self.btn_name = tk.Button(self, bg = BG,fg = FG, text=self.clean_name(), command = cmd_goto)
+        self.path = os.path.abspath(path)
+        self.theme = theme
+
+        tk.Frame.__init__(self, root, bg = theme["bg"])
+
+        self.btn_toggle = tk.Button(
+            self, 
+            bg = theme['bg_off'] if self.is_disable() else theme['bg_on'], 
+            fg = theme["fg"], 
+            command = self.cmd_toggle, 
+            text = '   ',
+        )
+        
+        self.btn_name = tk.Button(
+            self, 
+            bg = theme["bg"],
+            fg = theme["fg"], 
+            text=self.clean_name(),
+            command = cmd,
+        )
 
 
 
@@ -45,31 +48,44 @@ class Mod(tk.Frame):
         self.btn_name.grid(row=0, column=2)
 
     
-    
-    def path(self):
-        return make_path(self.folder, self.name)
+
 
     def clean_name(self):
-        while self.is_disable():
-            self.name = self.name[8:] # delete "DISABLE"
-            while self.name.startswith('_'):
-                self.name = self.name[1:]
-        return self.name
+        return clean_name_of_path(self.path)
         
 
-    def is_disable(self) -> bool:
-        return self.name.lower().startswith("disabled")
+    # def is_disable(self) -> bool:
+    #     return is_mod_disabled(self.path)
     
     def disable(self):
-
+        new_p = disable_mod(self.path)
+        if new_p is None:
+            print("mod not found", self.path)
+        else:
+            self.path = new_p
+        return
         try:
-            old_path = self.path()
-            self.name = "DISABLED_" + self.clean_name()
-            os.rename(old_path, self.path())
+            old_p = self.path
+            new_p = clean_path(self.path)
+            os.rename(old_p, new_p)
+            self.path = new_p
         except FileNotFoundError:
-            print("this mod wasn't found")
+            print("this mod wasn't found", self.path)
 
     def able(self):
+        try:
+            self.path = able_mod(self.path)
+        except AssertionError:
+            print("Mod already ON", self.path)
+        except FileNotFoundError:
+            print('Mod not found', self.path)
+        return
+
+        if new_p is None:
+            print("mod not found", self.path)
+        else:
+            self.path = new_p
+        return 
         try:
             assert self.is_disable()
             old_path = self.path()
@@ -94,6 +110,8 @@ class Mod(tk.Frame):
         self.current_dir = path
         self.refresh()
 
+    def clean_name(self):
+        return clean_name_of_path(self.path)
 
 
 
