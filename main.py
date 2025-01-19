@@ -12,47 +12,7 @@ def deprecated(f):
     return func
 
 
-
- 
-MODS_FOLDER = ("c:/Users/Thomas/AppData/Roaming/XXMI Launcher/GIMI/Mods")
-DEEPNESS = 2 # profondeurs de categories, 0 = RaidenMod, 1 = Mods/Raiden/RaidenMod, 2 = Mods/Characters/Raiden/RaidenMod
-
-IGNORE = [
-    ".",
-    "BufferValue",
-]
-
-
-
-
 @deprecated
-def deballeur_mods(path, deepness):
-    for ignore in IGNORE:
-        if os.path.basename(path).startswith(ignore): return 
-    
-    if deepness == 0:
-        for mod in os.listdir(path):
-            yield [mod]
-    else:
-        for folder in os.listdir(path):
-            for *lp, mod in deballeur_mods(path + "\\" + folder, deepness -  1):
-                yield [folder] + lp + [mod]
-
-    return
-
-@deprecated
-def init_mods(path):
-    LIST_MODS = []
-    for modpath in deballeur_mods(MODS_FOLDER, DEEPNESS):
-        mod = Mod(*modpath)
-        LIST_MODS.append(mod)
-    return LIST_MODS
-
-    
-class Chara(tk.Frame):
-    Ellipsis
-
-
 def main():
 # Création de la fenêtre principale
 
@@ -120,30 +80,33 @@ def main():
 
 
 
-
 def main_test(
-        gimi = r'C:\Users\Thomas\AppData\Roaming\XXMI Launcher\GIMI\Mods',
-        zzmi = r'C:\Users\Thomas\AppData\Roaming\XXMI Launcher\ZZMI\Mods',
+        games_modfolders : dict,
+        **theme
     ):
     racine = tk.Tk()
 
     notebook = ttk.Notebook(racine,)
 
-    gimi_tab = Game(gimi, notebook, )
-    zzmi_tab = Game(zzmi, notebook, )
-
-    notebook.add(gimi_tab, text='GI')
-    notebook.add(zzmi_tab, text='ZZZ')
+    for game, modfolder in games_modfolders.items():
+        tab = Game(modfolder, root = notebook, **theme)
+        notebook.add(tab, text = game)
     
     notebook.pack(expand=True, fill='both')
-
-    
-
-
 
     return racine.mainloop()
 
 
 
 
-if __name__=="__main__": main_test()
+if __name__=="__main__": 
+    App(
+        games_folders={ 
+            "GIMI": r'C:\Users\Thomas\AppData\Roaming\XXMI Launcher\GIMI\Mods',
+            "ZZMI": r'C:\Users\Thomas\AppData\Roaming\XXMI Launcher\ZZMI\Mods',
+        },
+        bg = "#001111",
+        fg = "#FFFFEE",
+        bg_on = "#AAFFAA",
+        bg_off = "#FFAAAA",
+    ).mainloop()

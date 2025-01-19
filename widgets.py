@@ -20,7 +20,7 @@ class Mod(tk.Frame):
     cmd: what it does to click on the name """
     def __init__(self, path, cmd,*, root, **theme):
         
-        self.path = os.path.abspath(path)
+        self.path = abs_of_path(path)
         self.theme = theme
 
         tk.Frame.__init__(self, root, bg = theme["bg"])
@@ -50,68 +50,136 @@ class Mod(tk.Frame):
     
 
 
-    def clean_name(self):
+    def clean_name(self) -> str:
         return clean_name_of_path(self.path)
         
 
-    # def is_disable(self) -> bool:
-    #     return is_mod_disabled(self.path)
+    def is_disable(self) -> bool:
+        return is_mod_disabled(self.path)
     
     def disable(self):
-        new_p = disable_mod(self.path)
-        if new_p is None:
-            print("mod not found", self.path)
-        else:
-            self.path = new_p
-        return
         try:
-            old_p = self.path
-            new_p = clean_path(self.path)
-            os.rename(old_p, new_p)
-            self.path = new_p
+            self.path = disable_mod(self.path)
+            return True
+        except AssertionError:
+            print("Mod already off", self.path)
         except FileNotFoundError:
-            print("this mod wasn't found", self.path)
+            print('Mod not found', self.path)
+        return False
 
     def able(self):
         try:
             self.path = able_mod(self.path)
+            return True
         except AssertionError:
             print("Mod already ON", self.path)
         except FileNotFoundError:
             print('Mod not found', self.path)
-        return
-
-        if new_p is None:
-            print("mod not found", self.path)
-        else:
-            self.path = new_p
-        return 
-        try:
-            assert self.is_disable()
-            old_path = self.path()
-            self.name = self.clean_name()
-            os.rename(old_path, self.path())
-        except FileNotFoundError:
-            print("this mod cannot be found", self.path)
-
-        except AssertionError:
-            print("This mod isn't disabled", self.path)
+        return False
         
 
     def cmd_toggle(self):
+        """command to toggle mod when appropriate button is clicked"""
         if self.is_disable():
-            self.able()
-            self.btn_toggle.config(bg = 'green')
-        else:
-            self.disable()
+            if self.able(): self.btn_toggle.config(bg = 'green')
+        elif self.disable():
             self.btn_toggle.config(bg = "red")
 
-    def cmd_goto(self, path):
-        self.current_dir = path
-        self.refresh()
+class ScrollableFrame(tk.Frame):
 
-    def clean_name(self):
-        return clean_name_of_path(self.path)
+    def __init__(self, root, **theme):
+        self.frm = tk.Frame(root, ) # englobe tout le bordel
+        canvas = tk.Canvas(self.frm, bg = theme["bg"]) 
+        canvas.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
+        scrollbar = ttk.Scrollbar(self.frm, orient=tk.VERTICAL, command=canvas.yview) 
+        scrollbar.pack(side=tk.RIGHT, fill=tk.Y)
+        canvas.configure(yscrollcommand=scrollbar.set)
+        tk.Frame.__init__(self, canvas, bg = theme["bg"]) 
+        self.bind( "<Configure>", lambda e: canvas.configure( scrollregion=canvas.bbox("all") ) ) 
+        canvas.create_window((0, 0), window=self, anchor="nw")
+
+        self.grid = self.frm.grid
+        self.pack = self.frm.pack
+
+
+class ModList(tk.Frame):
+    def __init__(self, *paths, root, title = None, **theme):
+        tk.Frame.__init__(self, bg = theme['bg'])
+        if title is not None:
+            tk.Label(self, text = title, bg = theme["bg"], fg = theme["fg"])
+
+        self.frm_scrollable = ScrollableFrame(root=self, **theme)
+        for i, path in paths:
+            Mod(path, root = self.frm_scrollable, **theme).grid(row = i, column=1)
+        self.frm_scrollable.pack()
+    
+class Tab(tk.Frame):
+    """Base class for Tabs, ie what displays the mods / lists of mods"""
+    def __init__(self, root, **theme):
+
+        tk.Frame.__init__(self, root, bg = theme['bg'])
+    
+
+class TabExplorer(Tab):
+
+    sortmode = {}
+    def __init__(self,path, root, **theme):
+        Tab.__init__(self, root, **theme)
+        self.path = abs_of_path(path)
+    
+        self.curdir = self.path
+        self.deepness = 0
+
+        self.frm_menu = tk.Frame(
+            self,
+            bg = theme["bg"],   
+        )
+
+        self.btn_back = tk.Button(
+            self.frm_menu, 
+            bg = theme['bg'], 
+            fg = theme['fg'], 
+            command = self.cmd_back, 
+            text='<-'
+        )
+
+        self.btn_refresh = tk.Button(
+            self.frm_menu, 
+            bg = theme['bg'], 
+            fg = theme['fg'], 
+            command = self.cmd_refresh, 
+            text='refresh'
+        )
+        
+
+        self.frm_current = ...
+
+        self.frm_menu.grid(row = 0, column=0)
+        self.btn_refresh.grid(row = 0, column = 1)
+        self.btn_back.grid(row = 0, column = 0)
+        # self.frm_scrollable.grid(row = 2, column = 0)
+
+
+    def cmd_refresh(self) :
+        lst_mod = get_names(self.curdir, deepness = 0)
+        lst_mod.sort(**self.sortmode)
+
+        for children in self.frm_current.winfo_children():
+            children.destroy()
+        
+        self.frm_current = tk.Frame(self.frm_scrollable)
+        for modname in lst_mod:
+            ...
+    
+    def cmd_back(self):
+        if self.deepness > 0:
+            self.curdir = partent_of_path(self.curdir)
+            self.deepness -= 1
+
+        self.cmd_refresh()
+
+class TabFullList(Tab):
+    ...
 
 
 
@@ -119,53 +187,73 @@ class Game(tk.Frame):
 
     def __init__(
             self,
-            mod_folder,
-            *args, 
-            bg = "#111111",
-            fg = "#FFFFFF",
-            deepness = 0,
-            **kwargs,
-            
+            folder_path,
+            *,
+            root,
+            **theme,
         ):
 
-        tk.Frame.__init__(self, *args, bg=bg, **kwargs)
+        tk.Frame.__init__(self, root, bg=theme['bg'])
 
-        self.bg = bg
-        self.fg = fg
+        self.path = folder_path
+
+        # WIDGETS
     
-        self.deepness = deepness
-        self.deep = 0
-        self.current_dir = mod_folder
-        self.lst_chara = get_chara(mod_folder)
-        self.pack(expand=True, fill = tk.BOTH)
+        self.frm_menu = tk.Frame(
+            self,
+            bg = theme["bg"],   
+        )
 
-        self.lst_mods = []
+        self.btn_back = tk.Button(
+            self.frm_menu, 
+            bg = theme['bg'], 
+            fg = theme['fg'], 
+            command = self.cmd_back, 
+            text='<-'
+        )
 
-        refresh_btn = tk.Button(self, bg = bg, fg = fg, command = self.refresh, text='refresh')
-        refresh_btn.pack(anchor='n')
+        self.btn_refresh = tk.Button(
+            self.frm_menu, 
+            bg = theme['bg'], 
+            fg = theme['fg'], 
+            command = self.cmd_refresh, 
+            text='refresh'
+        )
 
-        goback_btn = tk.Button(self, bg = bg, fg = fg, command = self.cmd_goback, text='<-')
-        goback_btn.pack(anchor = 'nw')
+        supported_displays = [
+            "explorer",
+        ]
 
-        self.titre = tk.Label(self, bg =bg , fg =fg , text=self.current_dir)
-        self.titre.pack()
+        
+
+        self.frm_scrollable = ScrollableFrame(
+            self,
+            **theme
+        )
+
+     
+        
+        # self.lbl_titre = tk.Label(
+        #     self, 
+        #     bg =theme['bg'] ,
+        #     fg =theme["fg"] , 
+        #     text=self.current_dir
+        # )
+        
+        # self.lbl_titre.grid(row = 0, column = 1)
 
 
-
-        canvas = tk.Canvas(self, bg = "black") 
-        canvas.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
-        scrollbar = ttk.Scrollbar(self, orient=tk.VERTICAL, command=canvas.yview) 
-        scrollbar.pack(side=tk.RIGHT, fill=tk.Y)
-        canvas.configure(yscrollcommand=scrollbar.set)
-        self.scrollable_frame = tk.Frame(canvas, bg = "black") 
-        self.scrollable_frame.bind( "<Configure>", lambda e: canvas.configure( scrollregion=canvas.bbox("all") ) ) 
-        canvas.create_window((0, 0), window=self.scrollable_frame, anchor="nw")
+        self.frm_menu.grid(row = 0, column=0)
+        self.btn_refresh.grid(row = 0, column = 1)
+        self.btn_back.grid(row = 0, column = 0)
+        self.frm_scrollable.grid(row = 2, column = 0)
 
     
-        self.refresh()
+        self.cmd_refresh()
 
     
-    def refresh(self):
+    def cmd_refresh(self):
+        return
         lst_chara = get_chara(self.current_dir, self.deepness)
         self.titre.config(text=self.current_dir)
         for mod in self.lst_mods:
@@ -186,7 +274,8 @@ class Game(tk.Frame):
         
 
 
-    def cmd_goback(self):
+    def cmd_back(self):
+        return 
         if self.deep>0:
             self.deep -= 1
             self.current_dir = make_path(*self.current_dir.split("\\")[:-1])
@@ -199,5 +288,23 @@ class Game(tk.Frame):
         self.refresh()
 
 
-    def run(self):
-        return self.racine.mainloop()
+class App(tk.Tk):
+
+    def __init__(self, games_folders : dict[str, str], **theme):
+
+        tk.Tk.__init__(self, "selectr")
+
+        notebook = ttk.Notebook(self,)
+        for game, modfolder in games_folders.items():
+            tab = ttk.Notebook(notebook)
+            
+            explo = TabExplorer(modfolder, root = tab, **theme)
+
+            notebook.add(tab, text = game)
+
+
+            # tab = Game(modfolder, root = notebook, **theme)
+            notebook.add(tab, text = game)
+        notebook.pack(expand=True, fill = tk.BOTH)
+
+

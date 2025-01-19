@@ -1,6 +1,6 @@
 """functions that do the things in files"""
 import os
-
+from typing import Iterator
 
 
 def emballage(func, *args, **kwargs):
@@ -30,9 +30,26 @@ def get_chara(mod_folder, deepness = 0):
                     lst.append(make_path(chara, name))
     return sorted(lst)
 
+def get_names(rootpath, deepness = 1) -> Iterator[tuple[str]]:
+    """Return tuples the length of deepness containing the relative path from rootpath to all the folders at given deepness"""
+    if deepness <= 0:
+        yield tuple()
+    else:
+        for name in os.listdir(rootpath):
+            abs = make_path(rootpath, name)
+            if os.path.isdir(abs): # filter the files
+                for rest in get_names(abs, deepness-1):
+                    yield (name,) + rest
+    return
+
+
+
 
 def name_of_path(path):
     return os.path.basename(os.path.abspath(path))
+
+def partent_of_path(path):
+    return os.path.dirname(os.path.abspath(path))
 
 def clean_name_of_path(path):
     name = name_of_path(path)
@@ -47,25 +64,20 @@ def is_mod_disabled(modpath):
     return name.lower().startswith("disabled")
 
 def disable_mod(modpath):
+    """os.rename can raise an error, the handler is in the widgets, i thought it was more appropriate"""
     old_p = abs_of_path(modpath)
     new_p = clean_path(modpath)
-    try:
-        os.rename(old_p, new_p)
-        return new_p
-    except FileNotFoundError:
-        print("Mod not found", modpath)
-        return 
+    os.rename(old_p, new_p)
+    return new_p
+
 
 
 def able_mod(modpath):
     old_p = abs_of_path(modpath)
     new_p = disable_path(modpath)
-    try:
-        os.rename(old_p, new_p)
-        return new_p
-    except FileNotFoundError:
-        print("Mod not found", modpath)
-        return 
+    os.rename(old_p, new_p)
+    return new_p
+
 
 def toggle_mod(modpath):
     if is_mod_disabled(modpath):
