@@ -241,7 +241,7 @@ class Game(tk.Frame):
             *args, 
             bg = "#111111",
             fg = "#FFFFFF",
-            deepness = 1,
+            deepness = 0,
             **kwargs,
             
         ):
@@ -251,7 +251,7 @@ class Game(tk.Frame):
         self.bg = bg
         self.fg = fg
     
-        self.deepness = 1
+        self.deepness = 0
         self.deep = 0
         self.current_dir = mod_folder
         self.lst_chara = get_chara(mod_folder)
