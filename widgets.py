@@ -73,22 +73,24 @@ class Mod(tk.Frame):
             return True
         except AssertionError:
             print("Mod already ON", self.path)
+            return False
         except FileNotFoundError:
             print('Mod not found', self.path)
-        return False
+            return False
+
         
 
     def cmd_toggle(self):
         """command to toggle mod when appropriate button is clicked"""
         if self.is_disable():
-            if self.able(): self.btn_toggle.config(bg = 'green')
+            if self.able(): self.btn_toggle.config(bg = self.theme['bg_on'])
         elif self.disable():
-            self.btn_toggle.config(bg = "red")
+            self.btn_toggle.config(bg = self.theme['bg_off'])
 
 class ScrollableFrame(tk.Frame):
 
     def __init__(self, root, **theme):
-        self.frm = tk.Frame(root, ) # englobe tout le bordel
+        self.frm = tk.Frame(root, bg = theme["bg"]) # englobe tout le bordel
         canvas = tk.Canvas(self.frm, bg = theme["bg"]) 
         canvas.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
         scrollbar = ttk.Scrollbar(self.frm, orient=tk.VERTICAL, command=canvas.yview) 
@@ -103,15 +105,16 @@ class ScrollableFrame(tk.Frame):
 
 
 class ModList(tk.Frame):
-    def __init__(self, *paths, root, title = None, **theme):
-        tk.Frame.__init__(self, bg = theme['bg'])
+    def __init__(self, paths, root, cmds = None, title = None, **theme):
+        tk.Frame.__init__(self, root, bg = theme['bg'])
         if title is not None:
             tk.Label(self, text = title, bg = theme["bg"], fg = theme["fg"])
 
         self.frm_scrollable = ScrollableFrame(root=self, **theme)
-        for i, path in paths:
-            Mod(path, root = self.frm_scrollable, **theme).grid(row = i, column=1)
-        self.frm_scrollable.pack()
+        for i, path in enumerate(paths):
+            cmd = None if cmds is None else (cmds if callable(cmds) else cmds[i])
+            Mod(path, root = self.frm_scrollable, cmd = cmd, **theme).grid(row = i, column=1)
+        self.frm_scrollable.pack(expand = True)
     
 class Tab(tk.Frame):
     """Base class for Tabs, ie what displays the mods / lists of mods"""
@@ -122,11 +125,13 @@ class Tab(tk.Frame):
 
 class TabExplorer(Tab):
 
-    sortmode = {}
+    sortmode = {
+        'key': lambda x: clean_name_of_name(x[-1]),
+    }
     def __init__(self,path, root, **theme):
         Tab.__init__(self, root, **theme)
         self.path = abs_of_path(path)
-    
+        self.theme = theme
         self.curdir = self.path
         self.deepness = 0
 
@@ -152,31 +157,49 @@ class TabExplorer(Tab):
         )
         
 
-        self.frm_current = ...
+        self.frm_current = tk.Frame(
+            self, 
+            bg = theme['bg'],
+        )
 
         self.frm_menu.grid(row = 0, column=0)
         self.btn_refresh.grid(row = 0, column = 1)
         self.btn_back.grid(row = 0, column = 0)
         # self.frm_scrollable.grid(row = 2, column = 0)
 
+        self.frm_current.grid(row = 1, column = 0)
+
+        self.cmd_refresh()
+
 
     def cmd_refresh(self) :
-        lst_mod = get_names(self.curdir, deepness = 0)
+        lst_mod = list(get_names(self.curdir, deepness = 1))
         lst_mod.sort(**self.sortmode)
 
         for children in self.frm_current.winfo_children():
             children.destroy()
-        
-        self.frm_current = tk.Frame(self.frm_scrollable)
-        for modname in lst_mod:
-            ...
-    
+        lst_paths = [make_path(self.path, *modname) for modname in lst_mod]
+        ModList(
+            lst_paths, 
+            root = self.frm_current, 
+            cmds = [emballage(self.cmd_goto, path) for path in lst_paths],
+            **self.theme
+        ).pack()
+
+
     def cmd_back(self):
         if self.deepness > 0:
             self.curdir = partent_of_path(self.curdir)
             self.deepness -= 1
 
         self.cmd_refresh()
+
+    
+    def cmd_goto(self, path):
+        self.curdir = path
+        self.deepness += 1
+        self.cmd_refresh()
+
 
 class TabFullList(Tab):
     ...
@@ -299,7 +322,7 @@ class App(tk.Tk):
             tab = ttk.Notebook(notebook)
             
             explo = TabExplorer(modfolder, root = tab, **theme)
-
+            tab.add(explo, text="explo")
             notebook.add(tab, text = game)
 
 

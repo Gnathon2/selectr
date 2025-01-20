@@ -51,12 +51,16 @@ def name_of_path(path):
 def partent_of_path(path):
     return os.path.dirname(os.path.abspath(path))
 
-def clean_name_of_path(path):
-    name = name_of_path(path)
+def clean_name_of_name(name):
     while name.lower().startswith('disabled'):
         name = name[8:]
         while name.startswith("_"):
             name = name[1:]
+    return name
+
+def clean_name_of_path(path):
+    name = name_of_path(path)
+    name = clean_name_of_name(name)
     return name
 
 def is_mod_disabled(modpath):
@@ -66,7 +70,7 @@ def is_mod_disabled(modpath):
 def disable_mod(modpath):
     """os.rename can raise an error, the handler is in the widgets, i thought it was more appropriate"""
     old_p = abs_of_path(modpath)
-    new_p = clean_path(modpath)
+    new_p = disable_path(modpath)
     os.rename(old_p, new_p)
     return new_p
 
@@ -74,7 +78,8 @@ def disable_mod(modpath):
 
 def able_mod(modpath):
     old_p = abs_of_path(modpath)
-    new_p = disable_path(modpath)
+    new_p = clean_path(modpath)
+    print(old_p, new_p)
     os.rename(old_p, new_p)
     return new_p
 
