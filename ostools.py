@@ -3,11 +3,7 @@ import os
 from typing import Iterator
 
 
-def emballage(func, *args, **kwargs):
-    """wrapper for tkinter buttons"""
-    def f():
-        return func(*args, **kwargs)
-    return f
+
 
 def make_path(*elems : str):
     return os.path.sep.join(elems)
@@ -71,7 +67,9 @@ def disable_mod(modpath):
     """os.rename can raise an error, the handler is in the widgets, i thought it was more appropriate"""
     old_p = abs_of_path(modpath)
     new_p = disable_path(modpath)
-    os.rename(old_p, new_p)
+    print("disable", old_p, new_p)
+    assert not os.path.isfile(new_p)
+    os.renames(old_p, new_p)
     return new_p
 
 
@@ -79,8 +77,9 @@ def disable_mod(modpath):
 def able_mod(modpath):
     old_p = abs_of_path(modpath)
     new_p = clean_path(modpath)
-    print(old_p, new_p)
-    os.rename(old_p, new_p)
+    print("able", old_p, new_p)
+    assert not os.path.isfile(new_p)
+    os.renames(old_p, new_p)
     return new_p
 
 

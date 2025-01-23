@@ -8,6 +8,17 @@ def from_rgb(r,g,b):
     """
     return f'#{r:02x}{g:02x}{b:02x}'
 
+def emballage(func, *args, **kwargs):
+    """wrapper for tkinter buttons"""
+    def f():
+        return func(*args, **kwargs)
+    return f
+
+def emballage_func(func, fun, i):
+    def f():
+        return func(fun(i))
+    return f
+
 class Mod(tk.Frame):
     """One mod is displayed including:
     - preview if preview.png in the folder
@@ -41,6 +52,7 @@ class Mod(tk.Frame):
             command = cmd,
         )
 
+        tk.Button(self, command = self.test_print).grid(row = 0)
 
 
         # grid
@@ -48,7 +60,8 @@ class Mod(tk.Frame):
         self.btn_name.grid(row=0, column=2)
 
     
-
+    def test_print(self):
+        print(self.path)
 
     def clean_name(self) -> str:
         return clean_name_of_path(self.path)
@@ -105,6 +118,7 @@ class ScrollableFrame(tk.Frame):
 
 
 class ModList(tk.Frame):
+    """container for a list of mods, with a scrollbar and a title if specified"""
     def __init__(self, paths, root, cmds = None, title = None, **theme):
         tk.Frame.__init__(self, root, bg = theme['bg'])
         if title is not None:
@@ -178,14 +192,17 @@ class TabExplorer(Tab):
 
         for children in self.frm_current.winfo_children():
             children.destroy()
-        lst_paths = [make_path(self.path, *modname) for modname in lst_mod]
+        self.lst_paths = [make_path(self.curdir, *modname) for modname in lst_mod]
         ModList(
-            lst_paths, 
+            self.lst_paths, 
             root = self.frm_current, 
-            cmds = [emballage(self.cmd_goto, path) for path in lst_paths],
+            cmds = [emballage_func(self.cmd_goto, self.get_children, i) for i in range(len(self.lst_paths))],
             **self.theme
         ).pack()
 
+    def get_children(self, i):
+        return self.lst_paths[i]
+    
 
     def cmd_back(self):
         if self.deepness > 0:
